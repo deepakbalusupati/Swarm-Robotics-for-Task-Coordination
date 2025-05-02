@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Swarm Robotics Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { display: flex; flex-wrap: wrap; }
+        .panel { border: 1px solid #ccc; padding: 15px; margin: 10px; width: 45%; }
+        canvas { max-width: 100%; }
+    </style>
+</head>
+<body>
+    <h1>Swarm Robotics Monitoring Dashboard</h1>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Robot Status</h2>
+            <div id="robot-status"></div>
+        </div>
+        
+        <div class="panel">
+            <h2>Task Allocation</h2>
+            <canvas id="allocation-chart"></canvas>
+        </div>
+        
+        <div class="panel">
+            <h2>Swarm Visualization</h2>
+            <canvas id="swarm-map" width="400" height="400"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let swarmMapCtx = document.getElementById('swarm-map').getContext('2d');
+        let allocationChart = new Chart(
+            document.getElementById('allocation-chart'), 
+            {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Tasks', data: [] }] }
+            }
+        );
+
+        function updateDashboard(data) {
+            // Update robot status
+            let statusHtml = '<table border="1"><tr><th>Robot ID</th><th>Position</th><th>Battery</th><th>Tasks</th></tr>';
+            data.robots.forEach(robot => {
+                statusHtml += `<tr>
+                    <td>${robot.id}</td>
+                    <td>(${robot.x.toFixed(1)}, ${robot.y.toFixed(1)})</td>
+                    <td>${robot.battery.toFixed(1)}%</td>
+                    <td>${robot.tasks.join(', ')}</td>
+                </tr>`;
+            });
+            statusHtml += '</table>';
+            document.getElementById('robot-status').innerHTML = statusHtml;
+
+            // Update allocation chart
+            let taskCounts = {};
+            Object.values(data.allocations).forEach(robotId => {
+                taskCounts[robotId] = (taskCounts[robotId] || 0) + 1;
+            });
+            
+            allocationChart.data.labels = Object.keys(taskCounts).map(id => `Robot ${id}`);
+            allocationChart.data.datasets[0].data = Object.values(taskCounts);
+            allocationChart.update();
+
+            // Update swarm map
+            updateSwarmMap(data);
+        }
+
+        function updateSwarmMap(data) {
+            swarmMapCtx.clearRect(0, 0, 400, 400);
+            
+            // Draw tasks
+            data.tasks.forEach(task => {
+                swarmMapCtx.fillStyle = task.completed ? 'green' : 'red';
+                swarmMapCtx.beginPath();
+                swarmMapCtx.arc(task.x/25, task.y/25, 5, 0, 2 * Math.PI);
+                swarmMapCtx.fill();
+                swarmMapCtx.fillText(`T${task.id}`, task.x/25 + 8, task.y/25);
+            });
+
+            // Draw robots
+            data.robots.forEach(robot => {
+                swarmMapCtx.fillStyle = 'blue';
+                swarmMapCtx.beginPath();
+                swarmMapCtx.arc(robot.x/25, robot.y/25, 8, 0, 2 * Math.PI);
+                swarmMapCtx.fill();
+                swarmMapCtx.fillStyle = 'white';
+                swarmMapCtx.fillText(`R${robot.id}`, robot.x/25 - 5, robot.y/25 + 3);
+            });
+        }
+
+        function fetchData() {
+            fetch('/api/swarm_data')
+                .then(response => response.json())
+                .then(data => updateDashboard(data));
+        }
+
+        setInterval(fetchData, 1000);
+        fetchData(); // Initial load
+    </script>
+</body>
+</html>
