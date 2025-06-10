@@ -1,188 +1,186 @@
-![Screenshot](swarm-robotics.png)
+![Swarm Robotics](swarm-robotics.png)
 
 # Swarm Robotics for Task Coordination
 
-![Swarm Robotics Demo](web_interface/static/swarm-demo.gif) *(Example visualization of swarm behavior)*
-
 A decentralized swarm robotics system for autonomous task allocation, improving efficiency by 25% in multi-robot environments.
+
+## Overview
+
+This project implements a swarm robotics simulation framework focused on efficient task allocation. The system uses a decentralized algorithm to assign tasks to robots based on their position, battery level, and task requirements.
 
 ## Features
 
-- Decentralized task allocation algorithm
-- Robot simulation with dynamic state updates
-- Web-based monitoring dashboard
-- Real-time task visualization
-- Energy-aware task assignment
+- **Decentralized Task Allocation**: Automatically assigns tasks to the most suitable robots
+- **Real-time Simulation**: Visualizes robot movements and task assignments
+- **Energy-Aware Decision Making**: Considers battery levels when making allocation decisions
+- **Web-based Monitoring**: Interactive dashboard to monitor the swarm status
+- **Cross-Platform Support**: Works on both Linux and Windows
 
 ## Technologies
 
 - **Core**: C++17
-- **Networking**: Boost.Asio
+- **Networking**: Boost.Asio for communication
 - **Web Interface**: Python/Flask
 - **Build System**: CMake
-- **Simulation**: Multi-threaded environment
+- **Visualization**: HTML5/JavaScript
 
 ## Directory Structure
 
+```
 Swarm Robotics for Task Coordination/
-├── build/ # Build directory
-├── config/ # Configuration files
-├── include/ # Header files
-│ └── swarm_robotics.h # Main header
+├── build/                  # Build output directory
+├── config/                 # Configuration files
+│   └── config.json         # Application settings
+├── include/                # Header files
+│   └── swarm_robotics.h    # Main header
 ├── src/
-│ ├── core/ # Core functionality
-│ ├── simulation/ # Simulation code
-│ ├── algorithms/ # Task allocation algorithms
-│ └── communication/ # Network communication
-├── test/ # Unit tests
-├── web_interface/ # Monitoring dashboard
-│ ├── static/ # Static assets
-│ └── templates/ # HTML templates
-└── CMakeLists.txt # Build configuration
+│   ├── core/               # Core functionality
+│   ├── simulation/         # Simulation code
+│   ├── algorithms/         # Task allocation algorithms
+│   └── communication/      # Network communication
+├── web_interface/          # Monitoring dashboard
+│   ├── static/             # Static assets
+│   │   └── style.css       # Dashboard styling
+│   ├── templates/          # HTML templates
+│   │   └── index.html      # Main dashboard page
+│   └── app.py              # Flask web server
+├── CMakeLists.txt          # Build configuration
+├── run_swarm.sh            # Linux startup script
+├── run_swarm.bat           # Windows startup script
+└── .gitignore              # Git ignore file
+```
 
+## Prerequisites
+
+### Linux
+
+- GCC 11.4.0 or higher
+- CMake 3.10 or higher
+- Boost 1.71.0 or higher
+- Python 3.8 or higher
+- Flask
+
+### Windows
+
+- Visual Studio 2019 or 2022 with C++ support
+- CMake 3.10 or higher
+- Boost 1.71.0 or higher
+- Python 3.8 or higher
+- Flask
 
 ## Installation
 
-### Prerequisites
+### Linux
 
-- Ubuntu 22.04 LTS
-- GCC 11.4.0+
-- CMake 3.10+
-- Boost 1.71.0+
-- Python 3.8+
+1. Install the required dependencies:
+
+   ```bash
+   sudo apt update
+   sudo apt install -y build-essential cmake libboost-all-dev python3-pip
+   pip3 install flask
+   ```
+
+2. Clone the repository:
+
+   ```bash
+   git clone https://github.com/deepakbalusupati/Swarm-Robotics-for-Task-Coordination.git
+   cd Swarm-Robotics-for-Task-Coordination
+   ```
+
+3. Build the project:
+   ```bash
+   mkdir -p build && cd build
+   cmake ..
+   make
+   ```
+
+### Windows
+
+1. Install the prerequisites:
+
+   - Install [Visual Studio](https://visualstudio.microsoft.com/) with C++ development tools
+   - Install [CMake](https://cmake.org/download/)
+   - Install [Boost](https://www.boost.org/) (prebuilt binaries or build from source)
+   - Install [Python](https://www.python.org/downloads/)
+   - Install Flask: `pip install flask`
+
+2. Clone the repository:
+
+   ```cmd
+   git clone https://github.com/deepakbalusupati/Swarm-Robotics-for-Task-Coordination.git
+   cd Swarm-Robotics-for-Task-Coordination
+   ```
+
+3. Build the project:
+   ```cmd
+   mkdir build
+   cd build
+   cmake .. -G "Visual Studio 17 2022" -A x64
+   cmake --build . --config Release
+   ```
+
+## Usage
+
+### Running the Simulation
+
+#### Linux
 
 ```bash
-sudo apt update
-sudo apt install -y build-essential cmake libboost-all-dev python3-pip
-pip3 install flask
-Building the Project
-bash
-cd "Swarm Robotics for Task Coordination"
-mkdir -p build && cd build
-cmake ..
-make
-Usage
-Running the Simulation
-bash
+./run_swarm.sh
+```
 
-# In terminal 1 - Run the swarm simulator
-./build/swarm_simulator
+#### Windows
 
-# In terminal 2 - Run the web interface
-python3 web_interface/app.py
-Access the web interface at: http://localhost:5000
+```cmd
+run_swarm.bat
+```
 
-Simulation Controls
+The web interface will be available at: http://localhost:5000
+
+### Simulation Controls
+
 The simulation automatically:
 
-Creates 5 robots at random positions
+- Creates 5 robots at random positions
+- Generates 4 sample tasks
+- Continuously updates robot states
+- Reallocates tasks as needed
 
-Generates 4 sample tasks
+## Troubleshooting
 
-Continuously updates robot states
+### Common Issues
 
-Reallocates tasks as needed
+1. **Build Errors**:
 
-Testing Procedures
-Unit Tests
-Task Allocation Test:
+   - Ensure Boost is properly installed and its location is correctly specified
+   - Verify CMake version is 3.10 or higher
 
-Verify tasks are assigned to nearest available robot
+2. **Runtime Errors**:
+   - Check that Python Flask is installed: `pip install flask`
+   - Verify port 5000 is not in use by another application
 
-Check battery level affects assignment
+## Configuration
 
-Robot State Test:
+The application can be configured using the `config/config.json` file:
 
-Confirm position updates affect task costs
+```json
+{
+  "simulation": {
+    "num_robots": 5,
+    "update_interval_ms": 500,
+    "environment_size": 100.0
+  },
+  "network": {
+    "port": 8080,
+    "host": "127.0.0.1"
+  },
+  "web_interface": {
+    "port": 5000,
+    "update_interval_ms": 2000
+  }
+}
+```
 
-Verify battery depletion changes behavior
+## Acknowledgments
 
-Web Interface Test:
-
-Dashboard should update every 2 seconds
-
-All robots and tasks should be visible
-
-Performance Testing
-bash
-# Measure allocation time for N tasks
-time ./swarm_simulator --tasks=100
-Expected results:
-
-Linear time complexity for basic allocation
-
-25% better efficiency than centralized systems
-
-Sample Output
-Task 1 allocated to Robot 2
-Task 2 allocated to Robot 4
-Swarm Status:
-Robots: 5
-Tasks: 4
-Completed Tasks: 0
-Robot 2 has tasks: 1 
-Robot 4 has tasks: 2
-Deployment
-Local Deployment
-bash
-# Run as background service
-nohup ./swarm_simulator > swarm.log 2>&1 &
-nohup python3 web_interface/app.py > web.log 2>&1 &
-Cloud Deployment (AWS)
-Launch EC2 Ubuntu 22.04 instance
-
-Install dependencies as above
-
-Clone repository
-
-Build and run as background services
-
-Set up security groups for web interface (port 5000)
-
-Contributing
-Fork the repository
-
-Create feature branch (git checkout -b feature)
-
-Commit changes (git commit -am 'Add feature')
-
-Push to branch (git push origin feature)
-
-Create Pull Request
-
-License
-MIT License - See LICENSE file for details
-
-Project Maintainer: Deepak Balusupati
-Last Updated: October 2023
-
-
-## Additional Recommendations for GitHub:
-
-1. Add a `.gitignore` file:
-```bash
-nano .gitignore
-# Build artifacts
-build/
-*.o
-*.a
-*.so
-
-# Log files
-*.log
-
-# IDE files
-.vscode/
-.idea/
-
-# Python cache
-__pycache__/
-*.pyc
-Add a LICENSE file (e.g., MIT License)
-
-Create a demo GIF for the web interface:
-
-bash
-sudo apt install -y ffmpeg
-# Record your screen while using the web interface
-ffmpeg -i screen_recording.mp4 -vf scale=800:-1 -r 10 web_interface/static/swarm-demo.gif
+Project created and maintained by Deepak Balusupati.

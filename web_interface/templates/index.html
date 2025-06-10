@@ -2,13 +2,10 @@
 <html>
 <head>
     <title>Swarm Robotics Monitor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .container { display: flex; flex-wrap: wrap; }
-        .panel { border: 1px solid #ccc; padding: 15px; margin: 10px; width: 45%; }
-        canvas { max-width: 100%; }
-    </style>
 </head>
 <body>
     <h1>Swarm Robotics Monitoring Dashboard</h1>
@@ -28,6 +25,11 @@
             <h2>Swarm Visualization</h2>
             <canvas id="swarm-map" width="400" height="400"></canvas>
         </div>
+        
+        <div class="panel">
+            <h2>System Status</h2>
+            <div id="system-status"></div>
+        </div>
     </div>
 
     <script>
@@ -36,23 +38,55 @@
             document.getElementById('allocation-chart'), 
             {
                 type: 'bar',
-                data: { labels: [], datasets: [{ label: 'Tasks', data: [] }] }
+                data: { 
+                    labels: [], 
+                    datasets: [{ 
+                        label: 'Tasks', 
+                        data: [],
+                        backgroundColor: '#0078d7' 
+                    }] 
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
             }
         );
 
+        function getBatteryClass(level) {
+            if (level < 30) return 'battery-low';
+            if (level < 70) return 'battery-medium';
+            return 'battery-high';
+        }
+
         function updateDashboard(data) {
             // Update robot status
-            let statusHtml = '<table border="1"><tr><th>Robot ID</th><th>Position</th><th>Battery</th><th>Tasks</th></tr>';
+            let statusHtml = '<table><tr><th>Robot ID</th><th>Position</th><th>Battery</th><th>Tasks</th></tr>';
             data.robots.forEach(robot => {
                 statusHtml += `<tr>
                     <td>${robot.id}</td>
                     <td>(${robot.x.toFixed(1)}, ${robot.y.toFixed(1)})</td>
-                    <td>${robot.battery.toFixed(1)}%</td>
-                    <td>${robot.tasks.join(', ')}</td>
+                    <td class="${getBatteryClass(robot.battery)}">${robot.battery.toFixed(1)}%</td>
+                    <td>${robot.tasks.join(', ') || 'None'}</td>
                 </tr>`;
             });
             statusHtml += '</table>';
             document.getElementById('robot-status').innerHTML = statusHtml;
+
+            // Update system status
+            let systemStatusHtml = `
+                <p>Total robots: ${data.robots.length}</p>
+                <p>Total tasks: ${data.tasks.length}</p>
+                <p>Completed tasks: ${data.tasks.filter(t => t.completed).length}</p>
+            `;
+            document.getElementById('system-status').innerHTML = systemStatusHtml;
 
             // Update allocation chart
             let taskCounts = {};
@@ -69,36 +103,57 @@
         }
 
         function updateSwarmMap(data) {
-            swarmMapCtx.clearRect(0, 0, 400, 400);
+            const canvas = document.getElementById('swarm-map');
+            const ctx = canvas.getContext('2d');
+            const scale = 4; // Scale factor to fit on canvas
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = '#eee';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= 100; i += 10) {
+                ctx.beginPath();
+                ctx.moveTo(i * scale, 0);
+                ctx.lineTo(i * scale, 400);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, i * scale);
+                ctx.lineTo(400, i * scale);
+                ctx.stroke();
+            }
             
             // Draw tasks
             data.tasks.forEach(task => {
-                swarmMapCtx.fillStyle = task.completed ? 'green' : 'red';
-                swarmMapCtx.beginPath();
-                swarmMapCtx.arc(task.x/25, task.y/25, 5, 0, 2 * Math.PI);
-                swarmMapCtx.fill();
-                swarmMapCtx.fillText(`T${task.id}`, task.x/25 + 8, task.y/25);
+                ctx.fillStyle = task.completed ? '#4CAF50' : '#F44336';
+                ctx.beginPath();
+                ctx.arc(task.x * scale, task.y * scale, 5, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillText(`T${task.id}`, task.x * scale + 8, task.y * scale);
             });
 
             // Draw robots
             data.robots.forEach(robot => {
-                swarmMapCtx.fillStyle = 'blue';
-                swarmMapCtx.beginPath();
-                swarmMapCtx.arc(robot.x/25, robot.y/25, 8, 0, 2 * Math.PI);
-                swarmMapCtx.fill();
-                swarmMapCtx.fillStyle = 'white';
-                swarmMapCtx.fillText(`R${robot.id}`, robot.x/25 - 5, robot.y/25 + 3);
+                ctx.fillStyle = '#2196F3';
+                ctx.beginPath();
+                ctx.arc(robot.x * scale, robot.y * scale, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = 'white';
+                ctx.fillText(`R${robot.id}`, robot.x * scale - 5, robot.y * scale + 3);
             });
         }
 
         function fetchData() {
             fetch('/api/swarm_data')
                 .then(response => response.json())
-                .then(data => updateDashboard(data));
+                .then(data => updateDashboard(data))
+                .catch(error => console.error('Error fetching data:', error));
         }
 
-        setInterval(fetchData, 1000);
-        fetchData(); // Initial load
+        // Initial load and set interval
+        fetchData();
+        setInterval(fetchData, 2000);
     </script>
 </body>
 </html>
